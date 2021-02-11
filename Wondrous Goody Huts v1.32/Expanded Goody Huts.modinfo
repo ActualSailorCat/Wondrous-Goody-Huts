@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Mod id="2d90451f-08c9-47de-bce8-e9b7fdecbe92" version="1">
+  <Properties>
+    <Name>[COLOR:ResGoldLabelCS]Wondrous[ENDCOLOR] Goody Huts</Name>
+    <Description>[COLOR:ResGoldLabelCS]Adds 8 wondrous new tribal village rewards including:[ENDCOLOR] a random unit, improvement, resource, or policy; knowledge of an undiscovered wonder; a meeting with an unmet city-state; enhanced sight; and a formation upgrade.</Description>
+    <Created>1613074534</Created>
+    <Teaser>Adds 8 wondrous new tribal village rewards.</Teaser>
+    <Authors>SailorCat</Authors>
+    <SpecialThanks>Gedemon, SeelingCat</SpecialThanks>
+    <CompatibleVersions>1.2,2.0</CompatibleVersions>
+  </Properties>
+  <InGameActions>
+    <UpdateDatabase id="db">
+      <Properties>
+        <LoadOrder>1779</LoadOrder>
+      </Properties>
+      <File>Sailor_Goodies_Defines.sql</File>
+    </UpdateDatabase>
+    <AddGameplayScripts id="lua">
+      <File>Sailor_Goodies_Scripts.lua</File>
+    </AddGameplayScripts>
+    <UpdateText id="txt">
+      <Properties>
+        <LoadOrder>1779</LoadOrder>
+      </Properties>
+      <File>Sailor_Goodies_Text.xml</File>
+      <File>Sailor_Goodies_Text_Update.sql</File>
+    </UpdateText>
+  </InGameActions>
+  <Files>
+    <File>Sailor_Goodies_Defines.sql</File>
+    <File>Sailor_Goodies_Scripts.lua</File>
+    <File>Sailor_Goodies_Text.xml</File>
+    <File>Sailor_Goodies_Text_Update.sql</File>
+    <File>Sailor_Goodies_UI.lua</File>
+    <File>Sailor_Goodies_UI.xml</File>
+  </Files>
+</Mod>
