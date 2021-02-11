@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS Sailor_WondrousGoodyWeights (SubTypeGoodyHut text def
 INSERT OR REPLACE INTO Sailor_WondrousGoodyWeights
 		(SubTypeGoodyHut,						Weight) 
 VALUES	('GOODYHUT_SAILOR_RANDOMRESOURCE',		100), -- Random resource granted.
-		('GOODYHUT_SAILOR_RANDOMUNIT',			1000), -- Random unit granted.
+		('GOODYHUT_SAILOR_RANDOMUNIT',			100), -- Random unit granted.
 		('GOODYHUT_SAILOR_RANDOMIMPROVEMENT',	100), -- Random improvement granted.
 		('GOODYHUT_SAILOR_SIGHTBOMB',			100), -- Increased sight + sight through features.
 		('GOODYHUT_SAILOR_RANDOMPOLICY',		100), -- Random policy granted.
