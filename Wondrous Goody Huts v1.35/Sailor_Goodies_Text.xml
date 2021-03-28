@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GameData>
+	<BaseGameText>
+		<Row Tag="LOC_GOODYHUT_SAILOR_RANDOMRESOURCE">
+			<Text>[COLOR_LIGHTBLUE]You are granted a random resource.[ENDCOLOR]</Text>
+		</Row>
+		<Row Tag="LOC_GOODYHUT_SAILOR_RANDOMUNIT">
+			<Text>[COLOR_LIGHTBLUE]You are granted a random unit.[ENDCOLOR]</Text>
+		</Row>
+		<Row Tag="LOC_GOODYHUT_SAILOR_RANDOMIMPROVEMENT">
+			<Text>[COLOR_LIGHTBLUE]You are granted a random improvement.[ENDCOLOR]</Text>
+		</Row>
+		<Row Tag="LOC_GOODYHUT_SAILOR_SIGHTBOMB">
+			<Text>[COLOR_LIGHTBLUE]You unit receives wilderness training (enhanced sight).[ENDCOLOR]</Text>
+		</Row>
+		<Row Tag="LOC_GOODYHUT_SAILOR_RANDOMPOLICY">
+			<Text>[COLOR_LIGHTBLUE]You are granted a random [ICON_Policy] policy.[ENDCOLOR]</Text>
+		</Row>
+		<Row Tag="LOC_GOODYHUT_SAILOR_FORMATION">
+			<Text>[COLOR_LIGHTBLUE]Your unit learns a [ICON_Corps] formation.[ENDCOLOR]</Text>
+		</Row>
+		<Row Tag="LOC_GOODYHUT_SAILOR_WONDER">
+			<Text>[COLOR_LIGHTBLUE]You discover a new natural wonder.[ENDCOLOR]</Text>
+		</Row>
+		<Row Tag="LOC_GOODYHUT_SAILOR_CITYSTATE">
+			<Text>[COLOR_LIGHTBLUE]You learn of a new city-state.[ENDCOLOR]</Text>
+		</Row>
+	</BaseGameText>
+</GameData>
