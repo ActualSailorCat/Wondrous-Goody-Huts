@@ -1,4 +1,4 @@
-UPDATE GoodyHuts SET Weight = 0 AND ImprovementType = 'IMPROVEMENT_METEOR_GOODY' WHERE GoodyHutType NOT LIKE '%SAILOR%';
+--UPDATE GoodyHuts SET Weight = 0 AND ImprovementType = 'IMPROVEMENT_METEOR_GOODY' WHERE GoodyHutType NOT LIKE '%SAILOR%';
 CREATE TABLE IF NOT EXISTS Sailor_WondrousGoodyWeights (SubTypeGoodyHut text default null, Weight integer default 0);
 --////////////////////////////////////////////////////////////
 --////////////////////////////////////////////////////////////
