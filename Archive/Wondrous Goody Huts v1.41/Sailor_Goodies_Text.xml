@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<GameData>
+	<BaseGameText>
+		<Row Tag="LOC_GOODYHUT_SAILOR_RANDOMRESOURCE">
+			<Text>[COLOR_LIGHTBLUE]You are granted a random resource.[ENDCOLOR]</Text>
+		</Row>
+		<Row Tag="LOC_GOODYHUT_SAILOR_RANDOMUNIT">
+			<Text>[COLOR_LIGHTBLUE]You are granted a random unique unit.[ENDCOLOR]</Text>
+		</Row>
+		<Row Tag="LOC_GOODYHUT_SAILOR_RANDOMIMPROVEMENT">
+			<Text>[COLOR_LIGHTBLUE]You are granted a random improvement.[ENDCOLOR]</Text>
+		</Row>
+		<Row Tag="LOC_GOODYHUT_SAILOR_SIGHTBOMB">
+			<Text>[COLOR_LIGHTBLUE]You unit receives [ICON_Ability] Wilderness Training.[ENDCOLOR]</Text>
+		</Row>
+		<Row Tag="LOC_ABILITY_SAILOR_GOODY_WILDERNESS_NAME">
+			<Text>Wilderness Training</Text>
+		</Row>
+		<Row Tag="LOC_ABILITY_SAILOR_GOODY_WILDERNESS_DESCRIPTION">
+			<Text>+2 Sight. Can see through features.</Text>
+		</Row>
+		<Row Tag="LOC_GOODYHUT_SAILOR_RANDOMPOLICY">
+			<Text>[COLOR_LIGHTBLUE]You are granted a random [ICON_Policy] Policy.[ENDCOLOR]</Text>
+		</Row>
+		<Row Tag="LOC_GOODYHUT_SAILOR_FORMATION">
+			<Text>[COLOR_LIGHTBLUE]Your unit has its [ICON_Corps] Formation upgraded.[ENDCOLOR]</Text>
+		</Row>
+		<Row Tag="LOC_GOODYHUT_SAILOR_WONDER">
+			<Text>[COLOR_LIGHTBLUE]You discover a new natural wonder.[ENDCOLOR]</Text>
+		</Row>
+		<Row Tag="LOC_GOODYHUT_SAILOR_CITYSTATE">
+			<Text>[COLOR_LIGHTBLUE]You learn of a new city-state.[ENDCOLOR]</Text>
+		</Row>
+		<Row Tag="LOC_GOODYHUT_SAILOR_SPY">
+			<Text>[COLOR_LIGHTBLUE]You are granted a Spy.[ENDCOLOR]</Text>
+		</Row>
+		<Row Tag="LOC_GOODYHUT_SAILOR_PRODUCTION">
+			<Text>[COLOR_LIGHTBLUE]You are granted a burst of [ICON_Production] Production.[ENDCOLOR]</Text>
+		</Row>
+		<Row Tag="LOC_GOODYHUT_SAILOR_TELEPORT">
+			<Text>[COLOR_LIGHTBLUE]Your unit embarks upon an expedition.[ENDCOLOR]</Text>
+		</Row>
+	</BaseGameText>
+</GameData>
