@@ -4,7 +4,7 @@
 -- Special Thanks: Gedemon
 -- //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 -- //////////////////////////////////////////////////////////////////////////////////////////////////////////////
--- // Exposed Members init - anything in this table is available across contexts, and, more importantly for us, across scripts without a bunch of cludgy includes
+-- // Exposed Members init - anything in this table is available across contexts, and, more importantly for us, across scripts and post-script without a bunch of cludgy includes
 if not ExposedMembers.WGH then ExposedMembers.WGH = {}; end
 WGH = ExposedMembers.WGH;
 
@@ -38,17 +38,48 @@ for i = 0, Map.GetPlotCount()-1, 1 do
 	end
 end
 
--- Door's stuck! - this is called in the listener when applying a reward fails, and supplies a default reward with appropriate World View text
-function WGH.Sailor_Goody_DoorStuck( pPlayer, pOwner, iX, iY, pUnitAbility, ability, switch, sMessage )
+-- Door's stuck! this is called in the listener when applying a reward fails, and supplies a default reward with appropriate World View text
+function WGH.Sailor_Goody_DoorStuck( pPlayer, pOwner, iX, iY, sMessage )
 	-- print("Door's stuck! Spawning unit instead.")
 	local sTargetUnit, iSpawnX, iSpawnY = WGH.Sailor_Goody_RandomUnit(pPlayer, iX, iY) -- // Call Random Unit Roller Function
 	UnitManager.InitUnit(pOwner, sTargetUnit, iSpawnX, iSpawnY)
-	pUnitAbility:ChangeAbilityCount(ability, -switch)
 	if pPlayer:IsHuman() then
 		Game.AddWorldViewText(pOwner, Locale.Lookup(sMessage), iX, iY, 0)
 	end
 	print("Door's stuck! Spawning a " .. sTargetUnit .. " for Player " .. pOwner .. " near plot (x " .. iSpawnX .. ", y " .. iSpawnY .. ") instead.")
 	return
+end
+
+-- table of temporarily excluded city objects keyed to ID: a city goes here after receiving a production burst reward, and will receive no further such rewards while in this table
+WGH.ExcludedCities = {}
+
+-- removes a city from the temporarily excluded cities table when it has something in its production queue, allowing it to receive a production burst reward (again)
+function WGH.IncludeCity( playerID, cityID, productionID, objectID, bCancelled )
+	if WGH.ExcludedCities[cityID] then 
+		WGH.ExcludedCities[cityID] = nil
+		print("Door's unstuck in city " .. cityID .. " (Player " .. playerID .. ")")
+	end
+end
+
+-- clears the temporarily excluded cities table at the end of each Player's turn, since chances are good that no city has an empty queue at that time
+function WGH.ResetExcludedCities( playerID )
+	WGH.ExcludedCities = {}
+end
+
+-- returns a (possibly empty) table of city objects, and a (random) city object or nil; facilitates spy and production burst rewards in cities other than the capital, and a fallback
+function WGH.GetPlayerCities( pPlayer )
+	local tCities = {}
+	for i, pCity in pPlayer:GetCities():Members() do 
+		table.insert(tCities, pCity)
+	end
+	if #tCities > 1 then 
+		local iRandIndex = TerrainBuilder.GetRandomNumber(#tCities, "Random Player City Grabber") + 1
+		return tCities, tCities[iRandIndex]
+	elseif #tCities == 1 then 
+		return tCities, tCities[1]
+	else 
+		return tCities, nil
+	end
 end
 
 -- ///////////////////////////////////////////////////////
@@ -76,8 +107,8 @@ function WGH.Sailor_Expanded_Goodies(playerID, unitID, iUnknown1, iUnknown2)
 		[abilityPolicy] = "[COLOR_LIGHTBLUE]Valid policy not found! Spawning unit instead.[ENDCOLOR]", 
 		[abilityWonder] = "[COLOR_LIGHTBLUE]Valid wonder not found! Spawning unit instead.[ENDCOLOR]", 
 		[abilityCityState] = "[COLOR_LIGHTBLUE]Valid city-state not found! Spawning unit instead.[ENDCOLOR]", 
-		[abilitySpy] = "", 
-		[abilityProduction] = "", 
+		[abilitySpy] = "[COLOR_LIGHTBLUE]Failed to place a Spy! Spawning unit instead.[ENDCOLOR]", 
+		[abilityProduction] = "[COLOR_LIGHTBLUE]No valid city production queue found! Spawning unit instead.[ENDCOLOR]", 
 		[abilityTeleport] = "[COLOR_LIGHTBLUE]Valid teleportation spot not found! Spawning unit instead.[ENDCOLOR]" 
 	}
 	local sPlayer			= Players[playerID]
@@ -103,8 +134,8 @@ function WGH.Sailor_Expanded_Goodies(playerID, unitID, iUnknown1, iUnknown2)
 			local switchProduction			= pUnitAbility:GetAbilityCount(abilityProduction)
 			local switchTeleport			= pUnitAbility:GetAbilityCount(abilityTeleport)
 			
--- // Random Resource
-			if switchRandResource == 1 then
+			-- // Random Resource
+			if switchRandResource == 1 then 
 				print("//// Wondrous Goody Type Activated: Random Resource")
 				local pTile, iResource = WGH.Sailor_Goody_RandomResource(pPlayer) -- // Call Random Resource Roller Function
 				if pTile ~= nil then
@@ -119,114 +150,64 @@ function WGH.Sailor_Expanded_Goodies(playerID, unitID, iUnknown1, iUnknown2)
 						local iNotifDesc		= "A source of " .. resourceStr .. " has been found."
 						NotificationManager.SendNotification(playerID, iGoodyNotifType, sGoodyNotifText, iNotifDesc, iTileX, iTileY)
 					end
-					pUnitAbility:ChangeAbilityCount(abilityResource, -switchRandResource)
-					break
 				else -- // Catch for nil: random unit spawner...
-					WGH.Sailor_Goody_DoorStuck( pPlayer, pOwner, iX, iY, pUnitAbility, abilityResource, switchRandResource, tDoorStuckText[abilityResource] )
-					-- print("Door's stuck! Spawning unit instead.")
-					-- local sTargetUnit, iSpawnX, iSpawnY = WGH.Sailor_Goody_RandomUnit(pPlayer, iX, iY) -- // Call Random Unit Roller Function
-					-- UnitManager.InitUnit(pOwner, sTargetUnit, iSpawnX, iSpawnY)
-					-- pUnitAbility:ChangeAbilityCount(abilityResource, -switchRandResource)
-					-- if pPlayer:IsHuman() then
-					-- 	Game.AddWorldViewText(pOwner, Locale.Lookup("[COLOR_LIGHTBLUE]Valid placement not found! Spawning unit instead.[ENDCOLOR]"), iX, iY, 0)
-					-- end
-					break
+					WGH.Sailor_Goody_DoorStuck( pPlayer, pOwner, iX, iY, tDoorStuckText[abilityResource] )
 				end
-			end
--- // Random Unit
-			if switchRandUnit == 1 then
+				pUnitAbility:ChangeAbilityCount(abilityResource, -switchRandResource)
+			-- // Random Unit
+			elseif switchRandUnit == 1 then 
 				print("//// Wondrous Goody Type Activated: Random Unit")
 				local sTargetUnit, iSpawnX, iSpawnY = WGH.Sailor_Goody_RandomUnit(pPlayer, iX, iY) -- // Call Random Unit Roller Function
 				UnitManager.InitUnit(pOwner, sTargetUnit, iSpawnX, iSpawnY)
 				pUnitAbility:ChangeAbilityCount(abilityUnit, -switchRandUnit)
-				break
-			end
--- // Random Improvement
-			if switchRandImprovement == 1 then 
+			-- // Random Improvement
+			elseif switchRandImprovement == 1 then 
 				print("//// Wondrous Goody Type Activated: Random Improvement")
 				local pTile, iImprovement = WGH.Sailor_Goody_RandomImprovement(pPlayer) -- // Call Random Improvement Roller Function
 				if pTile ~= nil then
 					ImprovementBuilder.SetImprovementType(pTile, iImprovement, 1)
-					pUnitAbility:ChangeAbilityCount(abilityImprovement, -switchRandImprovement)
-					break
 				else -- // Catch for nil: random unit spawner...
-					WGH.Sailor_Goody_DoorStuck( pPlayer, pOwner, iX, iY, pUnitAbility, abilityImprovement, switchRandImprovement, tDoorStuckText[abilityImprovement] )
-					-- print("Door's stuck! Spawning unit instead.")
-					-- local sTargetUnit, iSpawnX, iSpawnY = WGH.Sailor_Goody_RandomUnit(pPlayer, iX, iY) -- // Call Random Unit Roller Function
-					-- UnitManager.InitUnit(pOwner, sTargetUnit, iSpawnX, iSpawnY)
-					-- pUnitAbility:ChangeAbilityCount(abilityImprovement, -switchRandImprovement)
-					-- if pPlayer:IsHuman() then
-					-- 	Game.AddWorldViewText(playerID, Locale.Lookup("[COLOR_LIGHTBLUE]Valid placement not found! Spawning unit instead.[ENDCOLOR]"), iX, iY, 0)
-					-- end
-					break
+					WGH.Sailor_Goody_DoorStuck( pPlayer, pOwner, iX, iY, tDoorStuckText[abilityImprovement] )
 				end
-			end
--- // Sight
-			if switchSightBomb == 1 then
+				pUnitAbility:ChangeAbilityCount(abilityImprovement, -switchRandImprovement)
+			-- // Sight
+			elseif switchSightBomb == 1 then 
 				print("//// Wondrous Goody Type Activated: Wilderness Training")
 				local sAbility = pUnitAbility:GetAbilityCount("ABILITY_SAILOR_GOODY_WILDERNESS")
 				if sAbility == 0 then
 					pUnitAbility:ChangeAbilityCount("ABILITY_SAILOR_GOODY_WILDERNESS", 1)
-					pUnitAbility:ChangeAbilityCount(abilitySight, -switchSightBomb)
-				else
-					WGH.Sailor_Goody_DoorStuck( pPlayer, pOwner, iX, iY, pUnitAbility, abilitySight, switchSightBomb, tDoorStuckText[abilitySight] )
-					-- print("Door's stuck! Spawning unit instead.")
-					-- local sTargetUnit, iSpawnX, iSpawnY = WGH.Sailor_Goody_RandomUnit(pPlayer, iX, iY) -- // Call Random Unit Roller Function
-					-- UnitManager.InitUnit(pOwner, sTargetUnit, iSpawnX, iSpawnY)
-					-- if pPlayer:IsHuman() then
-					-- 	Game.AddWorldViewText(playerID, Locale.Lookup("[COLOR_LIGHTBLUE]Unit already has ability! Spawning unit instead.[ENDCOLOR]"), iX, iY, 0)
-					-- end
-					-- pUnitAbility:ChangeAbilityCount(abilitySight, -switchSightBomb)
-					break
+				else -- // Catch for when unit likely already has ability: random unit spawner...
+					WGH.Sailor_Goody_DoorStuck( pPlayer, pOwner, iX, iY, tDoorStuckText[abilitySight] )
 				end
-			end
--- // Formation
-			if switchFormation == 1 then
+				pUnitAbility:ChangeAbilityCount(abilitySight, -switchSightBomb)
+			-- // Formation
+			elseif switchFormation == 1 then 
 				print("//// Wondrous Goody Type Activated: Formation")
 				local pUnitFormation = pUnit:GetMilitaryFormation()
+				-- // Catch for army or invalid unit: random unit spawner...
 				if pUnitFormation > 1 or GameInfo.Units[pUnit:GetType()].FormationClass == 'FORMATION_CLASS_CIVILIAN' or GameInfo.Units[pUnit:GetType()].FormationClass == 'FORMATION_CLASS_SUPPORT' or string.find(GameInfo.Units[pUnit:GetType()].UnitType, "HERO") then
-					print("Door's stuck! Spawning unit instead.")
-					local sTargetUnit, iSpawnX, iSpawnY = WGH.Sailor_Goody_RandomUnit(pPlayer, iX, iY) -- // Call Random Unit Roller Function
-					UnitManager.InitUnit(pOwner, sTargetUnit, iSpawnX, iSpawnY)
-					if pPlayer:IsHuman() then
-						Game.AddWorldViewText(playerID, Locale.Lookup("[COLOR_LIGHTBLUE]Can't apply formation! Spawning unit instead.[ENDCOLOR]"), iX, iY, 0)
-					end
-					break
-				elseif pUnitFormation == 1 then
+					WGH.Sailor_Goody_DoorStuck( pPlayer, pOwner, iX, iY, tDoorStuckText[abilityFormation] )
+				elseif pUnitFormation == 1 then -- // Formation: Corps --> Army
 					local armyAbility = pUnitAbility:GetAbilityCount("ABILITY_SAILOR_GOODY_FORMATION_ARMY")
 					pUnitAbility:ChangeAbilityCount("ABILITY_SAILOR_GOODY_FORMATION_ARMY", 1)
-					pUnitAbility:ChangeAbilityCount(abilityFormation, -switchFormation)
-					break
-				else
+				else -- // Formation: None --> Corps
 					local corpsAbility = pUnitAbility:GetAbilityCount("ABILITY_SAILOR_GOODY_FORMATION_CORPS")
 					pUnitAbility:ChangeAbilityCount("ABILITY_SAILOR_GOODY_FORMATION_CORPS", 1)
-					pUnitAbility:ChangeAbilityCount(abilityFormation, -switchFormation)
-					break
 				end
-			end
--- // RandomPolicy
-			if switchRandPolicy == 1 then
+				pUnitAbility:ChangeAbilityCount(abilityFormation, -switchFormation)
+			-- // RandomPolicy
+			elseif switchRandPolicy == 1 then 
 				print("//// Wondrous Goody Type Activated: Policy")
 				local pPlayerCulture = pPlayer:GetCulture()
 				local iPolicy = WGH.Sailor_Goody_RandomPolicy(pPlayer) -- // Call Random Policy Roller Function
 				if iPolicy ~= nil then
 					pPlayerCulture:UnlockPolicy(iPolicy)
-					pUnitAbility:ChangeAbilityCount(abilityPolicy, -switchRandPolicy)
-					break
 				else -- // Catch for nil: random unit spawner...
-					WGH.Sailor_Goody_DoorStuck( pPlayer, pOwner, iX, iY, pUnitAbility, abilityPolicy, switchRandPolicy, tDoorStuckText[abilityPolicy] )
-					-- print("Door's stuck! Spawning unit instead.")
-					-- local sTargetUnit, iSpawnX, iSpawnY = WGH.Sailor_Goody_RandomUnit(pPlayer, iX, iY) -- // Call Random Unit Roller Function
-					-- UnitManager.InitUnit(pOwner, sTargetUnit, iSpawnX, iSpawnY)
-					-- pUnitAbility:ChangeAbilityCount(abilityPolicy, -switchRandPolicy)
-					-- if pPlayer:IsHuman() then
-					-- 	Game.AddWorldViewText(playerID, Locale.Lookup("[COLOR_LIGHTBLUE]Valid policy not found! Spawning unit instead.[ENDCOLOR]"), iX, iY, 0)
-					-- end
-					break
+					WGH.Sailor_Goody_DoorStuck( pPlayer, pOwner, iX, iY, tDoorStuckText[abilityPolicy] )
 				end
-			end
--- // Wonder
-			if switchWonder == 1 then
+				pUnitAbility:ChangeAbilityCount(abilityPolicy, -switchRandPolicy)
+			-- // Wonder
+			elseif switchWonder == 1 then 
 				local pPlayerVisibility = PlayersVisibility[pPlayer:GetID()]
 				print("//// Wondrous Goody Type Activated: Wonder")
 				local wonTable = WGH.Sailor_Goody_Wonder(pPlayer, pPlayerVisibility) -- // Call Random Wonder Roller Function
@@ -235,64 +216,60 @@ function WGH.Sailor_Expanded_Goodies(playerID, unitID, iUnknown1, iUnknown2)
 						local pVisibility = pPlayerVisibility:GetVisibilityCount(v)
 						pPlayerVisibility:ChangeVisibilityCount(v, 1)
 					end
-					pUnitAbility:ChangeAbilityCount(abilityWonder, -switchWonder)
-					break
 				else -- // Catch for nil: random unit spawner...
-					WGH.Sailor_Goody_DoorStuck( pPlayer, pOwner, iX, iY, pUnitAbility, abilityWonder, switchWonder, tDoorStuckText[abilityWonder] )
-					-- print("Door's stuck! Spawning unit instead.")
-					-- local sTargetUnit, iSpawnX, iSpawnY = WGH.Sailor_Goody_RandomUnit(pPlayer, iX, iY) -- // Call Random Unit Roller Function
-					-- UnitManager.InitUnit(pOwner, sTargetUnit, iSpawnX, iSpawnY)
-					-- pUnitAbility:ChangeAbilityCount(abilityWonder, -switchWonder)
-					-- if pPlayer:IsHuman() then
-					-- 	Game.AddWorldViewText(playerID, Locale.Lookup("[COLOR_LIGHTBLUE]Valid wonder not found! Spawning unit instead.[ENDCOLOR]"), iX, iY, 0)
-					-- end
-					break
+					WGH.Sailor_Goody_DoorStuck( pPlayer, pOwner, iX, iY, tDoorStuckText[abilityWonder] )
 				end
-			end
--- // City-State
-			if switchCityState == 1 then
+				pUnitAbility:ChangeAbilityCount(abilityWonder, -switchWonder)
+			-- // City-State
+			elseif switchCityState == 1 then 
 				print("//// Wondrous Goody Type Activated: City-State")
 				local pPlayerDiplomacy = pPlayer:GetDiplomacy()
 				local sTargetCS = WGH.Sailor_Goody_CityState(pOwner, pPlayer, pPlayerDiplomacy) -- // Call Random City-State Roller Function
 				if sTargetCS ~= nil then
 					pPlayerDiplomacy:SetHasMet(sTargetCS)
-					pUnitAbility:ChangeAbilityCount(abilityCityState, -switchCityState)
-					break
 				else -- // Catch for nil: random unit spawner...
-					WGH.Sailor_Goody_DoorStuck( pPlayer, pOwner, iX, iY, pUnitAbility, abilityCityState, switchCityState, tDoorStuckText[abilityCityState] )
-					-- print("Door's stuck! Spawning unit instead.")
-					-- local sTargetUnit, iSpawnX, iSpawnY = WGH.Sailor_Goody_RandomUnit(pPlayer, iX, iY) -- // Call Random Unit Roller Function
-					-- UnitManager.InitUnit(pOwner, sTargetUnit, iSpawnX, iSpawnY)
-					-- pUnitAbility:ChangeAbilityCount(abilityCityState, -switchCityState)
-					-- if pPlayer:IsHuman() then
-					-- 	Game.AddWorldViewText(playerID, Locale.Lookup("[COLOR_LIGHTBLUE]Valid city-state not found! Spawning unit instead.[ENDCOLOR]"), iX, iY, 0)
-					-- end
-					break
+					WGH.Sailor_Goody_DoorStuck( pPlayer, pOwner, iX, iY, tDoorStuckText[abilityCityState] )
 				end
-			end
--- // Spy
-			if switchSpy == 1 then
+				pUnitAbility:ChangeAbilityCount(abilityCityState, -switchCityState)
+			-- // Spy
+			elseif switchSpy == 1 then 
 				print("//// Wondrous Goody Type Activated: Spy")
 				pPlayer:AttachModifierByID("SAILOR_GOODY_SPY_CAPACITY")
-				local pCap = pPlayer:GetCities():GetCapitalCity()
-				UnitManager.InitUnit(pOwner, "UNIT_SPY", pCap:GetX(), pCap:GetY())
+				local t, pCity = WGH.GetPlayerCities( pPlayer )
+				if pCity ~= nil then 
+					UnitManager.InitUnit(pOwner, "UNIT_SPY", pCity:GetX(), pCity:GetY())
+				else 
+					WGH.Sailor_Goody_DoorStuck( pPlayer, pOwner, iX, iY, tDoorStuckText[abilitySpy] )
+				end
 				pUnitAbility:ChangeAbilityCount(abilitySpy, -switchSpy)
-				break
-			end
--- // Production
-			if switchProduction == 1 then
+			-- // Production
+			elseif switchProduction == 1 then 
 				print("//// Wondrous Goody Type Activated: Production")
-				local pCap		= pPlayer:GetCities():GetCapitalCity()
-				local pQueue	= pCap:GetBuildQueue()
-				pQueue:FinishProgress()
+				local tCities, o = WGH.GetPlayerCities( pPlayer )
+				if #tCities > 0 then -- // Find a city with a valid production queue
+					local bValidCityFound = false
+					for i, pCity in ipairs(tCities) do 
+						if not bValidCityFound then 
+							local cityID = pCity:GetID()
+							if not WGH.ExcludedCities[cityID] then 
+								local pQueue = pCity:GetBuildQueue()
+								if pQueue ~= nil then 
+									WGH.ExcludedCities[cityID] = pCity
+									pQueue:FinishProgress()
+									bValidCityFound = true
+								end
+							end
+						end
+					end
+					if not bValidCityFound then -- // Catch for no valid production queues: random unit spawner...
+						WGH.Sailor_Goody_DoorStuck( pPlayer, pOwner, iX, iY, tDoorStuckText[abilityProduction] )
+					end
+				else -- // Catch for no cities: random unit spawner...
+					WGH.Sailor_Goody_DoorStuck( pPlayer, pOwner, iX, iY, tDoorStuckText[abilityProduction] )
+				end
 				pUnitAbility:ChangeAbilityCount(abilityProduction, -switchProduction)
-				break
-				-- I can't figure any way to trigger a catch for nil
-				-- without consulting UI side, and I don't want that.
-				-- Rarely, it'll happen that this does nothing bc no queue.
-			end
--- // Teleport
-			if switchTeleport == 1 then
+			-- // Teleport
+			elseif switchTeleport == 1 then 
 				print("//// Wondrous Goody Type Activated: Expedition")
 				local sTargetPlot = WGH.Sailor_Goody_Teleport(pUnit, iX, iY, pPlayer) -- // Call Random Tile Roller Function
 				if sTargetPlot ~= nil then
@@ -300,24 +277,18 @@ function WGH.Sailor_Expanded_Goodies(playerID, unitID, iUnknown1, iUnknown2)
 					UnitManager.PlaceUnit(pUnit, sTargetPlot:GetX(), sTargetPlot:GetY())
 					UnitManager.RestoreMovement(pUnit) -- PlaceUnit consumes all movement. This restores it.
 					UnitManager.InitUnit(pOwner, "UNIT_SETTLER", sTargetPlot:GetX(), sTargetPlot:GetY())
-					pUnitAbility:ChangeAbilityCount(abilityTeleport, -switchTeleport)
-					break
 				else -- // Catch for nil: random unit spawner... 
-					WGH.Sailor_Goody_DoorStuck( pPlayer, pOwner, iX, iY, pUnitAbility, abilityTeleport, switchTeleport, tDoorStuckText[abilityTeleport] )
-					-- print("Door's stuck! Spawning unit instead.")
-					-- local sTargetUnit, iSpawnX, iSpawnY = WGH.Sailor_Goody_RandomUnit(pPlayer, iX, iY) -- // Call Random Unit Roller Function
-					-- UnitManager.InitUnit(pOwner, sTargetUnit, iSpawnX, iSpawnY)
-					-- pUnitAbility:ChangeAbilityCount(abilityTeleport, -switchTeleport)
-					-- if pPlayer:IsHuman() then
-					-- 	Game.AddWorldViewText(playerID, Locale.Lookup("[COLOR_LIGHTBLUE]Valid teleportation spot not found! Spawning unit instead.[ENDCOLOR]"), iX, iY, 0)
-					-- end
-					break
+					WGH.Sailor_Goody_DoorStuck( pPlayer, pOwner, iX, iY, tDoorStuckText[abilityTeleport] )
 				end
+				pUnitAbility:ChangeAbilityCount(abilityTeleport, -switchTeleport)
+			else 
 			end
 		end
 	end
 end
 Events.GoodyHutReward.Add(WGH.Sailor_Expanded_Goodies)
+Events.CityProductionChanged.Add(WGH.IncludeCity)
+Events.PlayerTurnDeactivated.Add(WGH.ResetExcludedCities)
 
 -- ///////////////////////////////////////////////////////
 -- Grabbing City Plots
