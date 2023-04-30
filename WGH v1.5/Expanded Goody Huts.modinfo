@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Mod id="2d90451f-08c9-47de-bce8-e9b7fdecbe92" version="1">
+  <Properties>
+    <Name>[COLOR:ResGoldLabelCS]Sailor Cat's[ENDCOLOR] Wondrous Goody Huts</Name>
+    <Description>[COLOR:ResGoldLabelCS]Adds 10 new tribal village rewards, including:[ENDCOLOR][NEWLINE][ICON_Bullet] A random unique unit.[NEWLINE][ICON_Bullet] A random unique improvement.[NEWLINE][ICON_Bullet] A random resource in your territory.[NEWLINE][ICON_Bullet] Unlock a random [ICON_Policy] Policy.[NEWLINE][ICON_Bullet] Discover an undiscovered natural wonder.[NEWLINE][ICON_Bullet] Meet an unmet city-state.[NEWLINE][ICON_Bullet] Your unit gains enhanced sight.[NEWLINE][ICON_Bullet] Your unit forms a [ICON_Corps] Corps or [ICON_Army] Army.[NEWLINE][ICON_Bullet] Receive a burst of [ICON_Production] Production.[NEWLINE][ICON_Bullet] A Spy and +1 Spy capacity.[NEWLINE][NEWLINE]An 11th reward is disabled by default, but can be enabled either in Defines.sql or with the Configurable Goody Huts mod:[NEWLINE][ICON_Bullet] Your unit embarks upon an expedition.</Description>
+    <Created>1682121194</Created>
+    <Teaser>Adds 10 wondrous new tribal village rewards.</Teaser>
+    <Authors>Sailor Cat</Authors>
+    <SpecialThanks>Gedemon, LeeS, SeelingCat, zzragnar0kzz, Groo, WildW</SpecialThanks>
+    <AffectsSavedGames>0</AffectsSavedGames>
+    <CompatibleVersions>1.2,2.0</CompatibleVersions>
+  </Properties>
+  <FrontEndActions>
+    <UpdateDatabase id="setup">
+      <File>Sailor_Goodies_Setup.sql</File>
+    </UpdateDatabase>
+  </FrontEndActions>
+  <InGameActions>
+    <UpdateDatabase id="db">
+      <Properties>
+        <LoadOrder>1779</LoadOrder>
+      </Properties>
+      <File>Sailor_Goodies_Defines.sql</File>
+    </UpdateDatabase>
+    <AddGameplayScripts id="lua">
+      <File>Sailor_Goodies_Scripts.lua</File>
+    </AddGameplayScripts>
+    <UpdateText id="txt">
+      <Properties>
+        <LoadOrder>1779</LoadOrder>
+      </Properties>
+      <File>Sailor_Goodies_Text.xml</File>
+    </UpdateText>
+  </InGameActions>
+  <Files>
+    <File>Sailor_Goodies_Defines.sql</File>
+    <File>Sailor_Goodies_Scripts.lua</File>
+    <File>Sailor_Goodies_Setup.sql</File>
+    <File>Sailor_Goodies_Text.xml</File>
+  </Files>
+</Mod>
